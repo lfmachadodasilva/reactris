@@ -10,10 +10,41 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 20
-          cache: "yarn"
+          cache: 'yarn'
       - name: install dependencies 📦
         run: yarn install
+      - name: pretiter 💅
+        run: yarn prettier:check
+      - name: lint 🕵️‍♂️
+        run: yarn lint
       - name: build 🏗️
         run: yarn build
       # - name: test ✅
       #   run: yarn test:integration
+      - name: Upload production-ready build files
+        uses: actions/upload-artifact@v4
+        with:
+          name: production-files
+          path: ./dist
+
+  deploy:
+    name: Deploy
+    needs: build
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'
+    permissions:
+      pages: write
+      id-token: write
+
+    steps:
+      - name: Download artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: production-files
+          path: ./dist
+
+      - name: Deploy to GitHub Pages
+        uses: peaceiris/actions-gh-pages@v4
+        with:
+          github_token: ${{ secrets.TOKEN }}
+          publish_dir: ./dist
